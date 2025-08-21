@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SkillShare - Learn & Teach Skills</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <h2>SkillShare</h2>
+            </div>
+            <ul class="nav-menu" id="nav-menu">
+                <li class="nav-item">
+                    <a href="#home" class="nav-link">Home</a>
+                </li>
+                <li class="nav-item">
+                    <a href="#skills" class="nav-link">Skills</a>
+                </li>
+                <li class="nav-item">
+                    <a href="#my-skills" class="nav-link">My Skills</a>
+                </li>
+                <li class="nav-item">
+                    <a href="#sessions" class="nav-link">Sessions</a>
+                </li>
+                <li class="nav-item">
+                    <a href="#wallet" class="nav-link">My Wallet</a>
+                </li>
+                <li class="nav-item">
+                    <a href="#profile" class="nav-link">Profile</a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link" id="logout-btn">Logout</a>
+                </li>
+            </ul>
+            <div class="hamburger" id="hamburger">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Authentication Section -->
+    <div id="auth-section" class="auth-section">
+        <div class="auth-container">
+            <div class="auth-form" id="login-form">
+                <h2>Login</h2>
+                <form>
+                    <input type="email" id="login-email" placeholder="Email" required>
+                    <input type="password" id="login-password" placeholder="Password" required>
+                    <button type="submit" id="login-btn">Login</button>
+                </form>
+                <p>Don't have an account? <a href="#" id="show-signup">Sign up</a></p>
+            </div>
+
+            <div class="auth-form" id="signup-form" style="display: none;">
+                <h2>Sign Up</h2>
+                <form>
+                    <input type="text" id="signup-name" placeholder="Full Name" required>
+                    <input type="email" id="signup-email" placeholder="Email" required>
+                    <input type="password" id="signup-password" placeholder="Password" required>
+                    <input type="text" id="signup-rollno" placeholder="Roll Number" required>
+                    <select id="signup-department" required>
+                        <option value="">Select Department</option>
+                        <option value="Computer Science">Computer Science</option>
+                        <option value="Electrical Engineering">Electrical Engineering</option>
+                        <option value="Mechanical Engineering">Mechanical Engineering</option>
+                        <option value="Civil Engineering">Civil Engineering</option>
+                        <option value="Business Administration">Business Administration</option>
+                        <option value="Other">Other</option>
+                    </select>
+                    <select id="signup-course" required>
+                        <option value="">Select Course</option>
+                        <option value="B.Tech">B.Tech</option>
+                        <option value="M.Tech">M.Tech</option>
+                        <option value="MBA">MBA</option>
+                        <option value="BCA">BCA</option>
+                        <option value="MCA">MCA</option>
+                        <option value="Other">Other</option>
+                    </select>
+                    <select id="signup-year" required>
+                        <option value="">Select Year</option>
+                        <option value="1">1st Year</option>
+                        <option value="2">2nd Year</option>
+                        <option value="3">3rd Year</option>
+                        <option value="4">4th Year</option>
+                        <option value="5">5th Year</option>
+                    </select>
+                    <button type="submit" id="signup-btn">Sign Up</button>
+                </form>
+                <p>Already have an account? <a href="#" id="show-login">Login</a></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Application -->
+    <div id="main-app" class="main-app" style="display: none;">
+        <!-- Home Section -->
+        <section id="home" class="section active">
+            <div class="container">
+                <h1>Welcome to SkillShare</h1>
+                <p>Connect with peers to learn and teach skills</p>
+                <div class="stats-container">
+                    <div class="stat-item">
+                        <h3 id="total-skills">0</h3>
+                        <p>Available Skills</p>
+                    </div>
+                    <div class="stat-item">
+                        <h3 id="active-sessions">0</h3>
+                        <p>Active Sessions</p>
+                    </div>
+                    <div class="stat-item">
+                        <h3 id="user-credits">0</h3>
+                        <p>Your Credits</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Skills Section -->
+        <section id="skills" class="section">
+            <div class="container">
+                <h1>Available Skills</h1>
+                <div class="skills-filter">
+                    <select id="payment-filter">
+                        <option value="">All Payment Types</option>
+                        <option value="credits">Credits</option>
+                        <option value="favor">Favor</option>
+                    </select>
+                    <select id="session-filter">
+                        <option value="">All Session Types</option>
+                        <option value="online">Online</option>
+                        <option value="offline">Offline</option>
+                    </select>
+                </div>
+                <div id="skills-list" class="skills-list">
+                    <!-- Skills will be loaded here -->
+                </div>
+            </div>
+        </section>
+
+        <!-- My Skills Section -->
+        <section id="my-skills" class="section">
+            <div class="container">
+                <h1>My Skills</h1>
+                <button id="add-skill-btn" class="btn btn-primary">Add New Skill</button>
+                <div id="my-skills-list" class="skills-list">
+                    <!-- User's skills will be loaded here -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Sessions Section -->
+        <section id="sessions" class="section">
+            <div class="container">
+                <h1>My Sessions</h1>
+                <div class="sessions-tabs">
+                    <button class="tab-btn active" data-tab="requested">Requested Sessions</button>
+                    <button class="tab-btn" data-tab="teaching">Teaching Sessions</button>
+                </div>
+                <div id="sessions-list" class="sessions-list">
+                    <!-- Sessions will be loaded here -->
+                </div>
+            </div>
+        </section>
+
+        <!-- My Wallet Section -->
+        <section id="wallet" class="section">
+            <div class="container">
+                <h1>My Wallet</h1>
+                <div class="wallet-container">
+                    <div class="wallet-balance">
+                        <h2>Current Balance</h2>
+                        <div class="balance-amount">
+                            <span id="wallet-credits">0</span>
+                            <span class="currency">Skill Credits</span>
+                        </div>
+                    </div>
+                    <div class="wallet-actions">
+                        <button class="btn btn-secondary" disabled>Add Credits (Coming Soon)</button>
+                        <button class="btn btn-secondary" disabled>Withdraw (Coming Soon)</button>
+                    </div>
+                    <div class="transaction-history">
+                        <h3>Transaction History</h3>
+                        <div class="placeholder-content">
+                            <p>Transaction history will be displayed here.</p>
+                            <p>Features coming soon:</p>
+                            <ul>
+                                <li>View all credit transactions</li>
+                                <li>Filter by date range</li>
+                                <li>Export transaction history</li>
+                                <li>Detailed transaction receipts</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Profile Section -->
+        <section id="profile" class="section">
+            <div class="container">
+                <h1>My Profile</h1>
+                <div class="profile-container">
+                    <form id="profile-form">
+                        <div class="form-group">
+                            <label for="profile-name">Full Name</label>
+                            <input type="text" id="profile-name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="profile-email">Email</label>
+                            <input type="email" id="profile-email" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label for="profile-rollno">Roll Number</label>
+                            <input type="text" id="profile-rollno" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="profile-department">Department</label>
+                            <select id="profile-department" required>
+                                <option value="">Select Department</option>
+                                <option value="Computer Science">Computer Science</option>
+                                <option value="Electrical Engineering">Electrical Engineering</option>
+                                <option value="Mechanical Engineering">Mechanical Engineering</option>
+                                <option value="Civil Engineering">Civil Engineering</option>
+                                <option value="Business Administration">Business Administration</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="profile-course">Course</label>
+                            <select id="profile-course" required>
+                                <option value="">Select Course</option>
+                                <option value="B.Tech">B.Tech</option>
+                                <option value="M.Tech">M.Tech</option>
+                                <option value="MBA">MBA</option>
+                                <option value="BCA">BCA</option>
+                                <option value="MCA">MCA</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="profile-year">Year</label>
+                            <select id="profile-year" required>
+                                <option value="">Select Year</option>
+                                <option value="1">1st Year</option>
+                                <option value="2">2nd Year</option>
+                                <option value="3">3rd Year</option>
+                                <option value="4">4th Year</option>
+                                <option value="5">5th Year</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Update Profile</button>
+                    </form>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Add Skill Modal -->
+    <div id="add-skill-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Add New Skill</h2>
+            <form id="add-skill-form">
+                <div class="form-group">
+                    <label for="skill-name">Skill Name</label>
+                    <input type="text" id="skill-name" required>
+                </div>
+                <div class="form-group">
+                    <label for="skill-description">Description</label>
+                    <textarea id="skill-description" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="skill-payment-type">Payment Type</label>
+                    <select id="skill-payment-type" required>
+                        <option value="">Select Payment Type</option>
+                        <option value="credits">Credits</option>
+                        <option value="favor">Favor</option>
+                    </select>
+                </div>
+                <div class="form-group" id="payment-amount-group">
+                    <label for="skill-payment-amount">Payment Amount (Credits)</label>
+                    <input type="number" id="skill-payment-amount" min="1">
+                </div>
+                <div class="form-group">
+                    <label for="skill-session-type">Session Type</label>
+                    <select id="skill-session-type" required>
+                        <option value="">Select Session Type</option>
+                        <option value="online">Online</option>
+                        <option value="offline">Offline</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary">Add Skill</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Session Request Modal -->
+    <div id="session-request-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Request Session</h2>
+            <form id="session-request-form">
+                <div id="skill-info"></div>
+                <div class="form-group">
+                    <label for="preferred-date1">Preferred Date 1</label>
+                    <input type="date" id="preferred-date1" required>
+                </div>
+                <div class="form-group">
+                    <label for="preferred-time1">Preferred Time 1</label>
+                    <input type="time" id="preferred-time1" required>
+                </div>
+                <div class="form-group">
+                    <label for="preferred-date2">Preferred Date 2 (Optional)</label>
+                    <input type="date" id="preferred-date2">
+                </div>
+                <div class="form-group">
+                    <label for="preferred-time2">Preferred Time 2 (Optional)</label>
+                    <input type="time" id="preferred-time2">
+                </div>
+                <div class="form-group">
+                    <label for="preferred-date3">Preferred Date 3 (Optional)</label>
+                    <input type="date" id="preferred-date3">
+                </div>
+                <div class="form-group">
+                    <label for="preferred-time3">Preferred Time 3 (Optional)</label>
+                    <input type="time" id="preferred-time3">
+                </div>
+                <button type="submit" class="btn btn-primary">Request Session</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Loading Spinner -->
+    <div id="loading" class="loading" style="display: none;">
+        <div class="spinner"></div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+    
+    <!-- Application Scripts -->
+    <script src="firebase-config.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
