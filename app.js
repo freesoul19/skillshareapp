@@ -752,9 +752,20 @@ function showToast(message, type = 'info') {
 
 // Dashboard data functions
 async function loadDashboardData() {
-    loadAllSkills();
-    loadSessions('requested');
+    await Promise.all([
+        loadAllSkills(),
+        loadSessions('requested'),
+        loadMySkills()
+    ]);
     updateWalletDisplay();
+    updateWelcomeMessage();
+    loadDashboardSkills();
+    loadDashboardSessions();
+    loadDashboardMySkills();
+    loadActivityFeed();
+    
+    // Setup search functionality
+    setupDashboardSearch();
 }
 
 function updateSkillsCount() {
@@ -766,4 +777,264 @@ function updateActiveSessionsCount() {
         session.status === 'approved' || session.status === 'pending'
     ).length;
     document.getElementById('active-sessions').textContent = activeSessions;
+}
+
+function updateWelcomeMessage() {
+    if (currentUserProfile && currentUserProfile.name) {
+        document.getElementById('welcome-message').textContent = `Welcome back, ${currentUserProfile.name.split(' ')[0]}!`;
+    }
+    
+    if (currentUserProfile && currentUserProfile.credits !== undefined) {
+        document.getElementById('header-credits').textContent = currentUserProfile.credits;
+    }
+}
+
+function loadDashboardSkills() {
+    const dashboardSkills = document.getElementById('dashboard-skills');
+    dashboardSkills.innerHTML = '';
+    
+    if (allSkills.length === 0) {
+        dashboardSkills.innerHTML = '<div class="no-data">No skills available at the moment.</div>';
+        return;
+    }
+    
+    // Show first 6 skills
+    const skillsToShow = allSkills.slice(0, 6);
+    
+    skillsToShow.forEach(skill => {
+        const skillElement = createDashboardSkillCard(skill);
+        dashboardSkills.appendChild(skillElement);
+    });
+}
+
+function createDashboardSkillCard(skill) {
+    const div = document.createElement('div');
+    div.className = 'dashboard-skill-card';
+    div.onclick = () => showSessionRequestModal(skill.id);
+    
+    const paymentText = skill.paymentType === 'credits' 
+        ? `${skill.paymentAmount} Credits`
+        : 'Favor';
+    
+    div.innerHTML = `
+        <h4>${skill.name}</h4>
+        <p>${skill.description.length > 100 ? skill.description.substring(0, 100) + '...' : skill.description}</p>
+        <div class="skill-meta">
+            <span class="skill-payment-small">${paymentText}</span>
+            <span class="skill-teacher-small">${skill.teacherEmail}</span>
+        </div>
+    `;
+    
+    return div;
+}
+
+function loadDashboardSessions() {
+    const dashboardSessions = document.getElementById('dashboard-sessions');
+    dashboardSessions.innerHTML = '';
+    
+    if (userSessions.length === 0) {
+        dashboardSessions.innerHTML = '<div class="no-data">No sessions yet. Request a session to get started!</div>';
+        return;
+    }
+    
+    // Show first 5 sessions
+    const sessionsToShow = userSessions.slice(0, 5);
+    
+    sessionsToShow.forEach(session => {
+        const sessionElement = createDashboardSessionCard(session);
+        dashboardSessions.appendChild(sessionElement);
+    });
+}
+
+function createDashboardSessionCard(session) {
+    const div = document.createElement('div');
+    div.className = `dashboard-session-card ${session.status}`;
+    
+    div.innerHTML = `
+        <div class="session-title">${session.skillName}</div>
+        <div class="session-meta">
+            <span>with ${session.teacherEmail}</span>
+            <span class="session-status-small ${session.status}">${session.status}</span>
+        </div>
+    `;
+    
+    return div;
+}
+
+function loadDashboardMySkills() {
+    const dashboardMySkills = document.getElementById('dashboard-my-skills');
+    
+    // We'll populate this after loadMySkills completes
+    setTimeout(() => {
+        dashboardMySkills.innerHTML = '';
+        
+        // Get my skills from the DOM (already loaded)
+        const mySkillsList = document.getElementById('my-skills-list');
+        const mySkillsCards = mySkillsList.querySelectorAll('.skill-card');
+        
+        if (mySkillsCards.length === 0) {
+            dashboardMySkills.innerHTML = '<div class="no-data">No skills added yet. Share your expertise!</div>';
+            return;
+        }
+        
+        // Show first 4 skills
+        Array.from(mySkillsCards).slice(0, 4).forEach(skillCard => {
+            const skill = extractSkillDataFromCard(skillCard);
+            const skillElement = createDashboardSkillCard(skill, true);
+            dashboardMySkills.appendChild(skillElement);
+        });
+        
+        // Update my skills count
+        document.getElementById('my-skills-count').textContent = mySkillsCards.length;
+    }, 1000);
+}
+
+function extractSkillDataFromCard(skillCard) {
+    const name = skillCard.querySelector('h3').textContent;
+    const description = skillCard.querySelector('.skill-description').textContent;
+    const paymentSpan = skillCard.querySelector('.skill-payment');
+    const teacherSpan = skillCard.querySelector('.skill-teacher');
+    
+    return {
+        name: name,
+        description: description,
+        paymentType: paymentSpan.classList.contains('credits') ? 'credits' : 'favor',
+        paymentAmount: paymentSpan.classList.contains('credits') ? 
+            parseInt(paymentSpan.textContent.match(/\d+/)[0]) : 0,
+        teacherEmail: teacherSpan.textContent.replace('by ', '')
+    };
+}
+
+function loadActivityFeed() {
+    const activityFeed = document.getElementById('activity-feed');
+    const activities = [];
+    
+    // Generate some sample activities based on user data
+    if (allSkills.length > 0) {
+        activities.push({
+            icon: '🎓',
+            text: `${allSkills.length} new skills available to learn`,
+            time: '2 hours ago'
+        });
+    }
+    
+    if (userSessions.length > 0) {
+        const pendingSessions = userSessions.filter(s => s.status === 'pending').length;
+        if (pendingSessions > 0) {
+            activities.push({
+                icon: '⏳',
+                text: `${pendingSessions} session request${pendingSessions > 1 ? 's' : ''} pending approval`,
+                time: '1 day ago'
+            });
+        }
+        
+        const approvedSessions = userSessions.filter(s => s.status === 'approved').length;
+        if (approvedSessions > 0) {
+            activities.push({
+                icon: '✅',
+                text: `${approvedSessions} session${approvedSessions > 1 ? 's' : ''} scheduled`,
+                time: '2 days ago'
+            });
+        }
+    }
+    
+    if (currentUserProfile && currentUserProfile.credits) {
+        activities.push({
+            icon: '💰',
+            text: `You have ${currentUserProfile.credits} credits available`,
+            time: '1 week ago'
+        });
+    }
+    
+    activities.push({
+        icon: '🎉',
+        text: 'Welcome to SkillShare! Start by adding your first skill.',
+        time: 'When you joined'
+    });
+    
+    activityFeed.innerHTML = '';
+    
+    if (activities.length === 0) {
+        activityFeed.innerHTML = '<div class="no-activity">No recent activity</div>';
+        return;
+    }
+    
+    activities.slice(0, 8).forEach(activity => {
+        const activityElement = document.createElement('div');
+        activityElement.className = 'activity-item';
+        
+        activityElement.innerHTML = `
+            <div class="activity-icon">${activity.icon}</div>
+            <div class="activity-content">
+                <div class="activity-text">${activity.text}</div>
+                <div class="activity-time">${activity.time}</div>
+            </div>
+        `;
+        
+        activityFeed.appendChild(activityElement);
+    });
+}
+
+function setupDashboardSearch() {
+    const searchInput = document.getElementById('dashboard-search');
+    const paymentFilter = document.getElementById('dashboard-payment-filter');
+    const sessionFilter = document.getElementById('dashboard-session-filter');
+    
+    // Add event listeners for real-time search
+    searchInput.addEventListener('input', performDashboardSearch);
+    paymentFilter.addEventListener('change', performDashboardSearch);
+    sessionFilter.addEventListener('change', performDashboardSearch);
+}
+
+function performDashboardSearch() {
+    const searchTerm = document.getElementById('dashboard-search').value.toLowerCase();
+    const paymentFilter = document.getElementById('dashboard-payment-filter').value;
+    const sessionFilter = document.getElementById('dashboard-session-filter').value;
+    const searchResults = document.getElementById('search-results');
+    
+    if (!searchTerm && !paymentFilter && !sessionFilter) {
+        searchResults.innerHTML = '';
+        return;
+    }
+    
+    let filteredSkills = allSkills;
+    
+    // Filter by search term
+    if (searchTerm) {
+        filteredSkills = filteredSkills.filter(skill => 
+            skill.name.toLowerCase().includes(searchTerm) ||
+            skill.description.toLowerCase().includes(searchTerm) ||
+            skill.teacherEmail.toLowerCase().includes(searchTerm)
+        );
+    }
+    
+    // Filter by payment type
+    if (paymentFilter) {
+        filteredSkills = filteredSkills.filter(skill => skill.paymentType === paymentFilter);
+    }
+    
+    // Filter by session type
+    if (sessionFilter) {
+        filteredSkills = filteredSkills.filter(skill => skill.sessionType === sessionFilter);
+    }
+    
+    searchResults.innerHTML = '';
+    
+    if (filteredSkills.length === 0) {
+        searchResults.innerHTML = '<div class="no-data">No skills found matching your search criteria.</div>';
+        return;
+    }
+    
+    // Show up to 6 results
+    filteredSkills.slice(0, 6).forEach(skill => {
+        const skillElement = createDashboardSkillCard(skill);
+        searchResults.appendChild(skillElement);
+    });
+    
+    if (filteredSkills.length > 6) {
+        const moreResults = document.createElement('div');
+        moreResults.className = 'no-data';
+        moreResults.innerHTML = `<p>+${filteredSkills.length - 6} more results. <a href="#" onclick="showSection('skills')">View all skills</a></p>`;
+        searchResults.appendChild(moreResults);
+    }
 }

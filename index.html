@@ -102,20 +102,132 @@
         <!-- Home Section -->
         <section id="home" class="section active">
             <div class="container">
-                <h1>Welcome to SkillShare</h1>
-                <p>Connect with peers to learn and teach skills</p>
+                <div class="dashboard-header">
+                    <h1>Dashboard</h1>
+                    <div class="user-welcome">
+                        <span id="welcome-message">Welcome back!</span>
+                        <div class="user-quick-info">
+                            <span class="user-credits-badge">
+                                <i class="credit-icon">💰</i>
+                                <span id="header-credits">0</span> Credits
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Stats -->
                 <div class="stats-container">
                     <div class="stat-item">
+                        <div class="stat-icon">🎓</div>
                         <h3 id="total-skills">0</h3>
                         <p>Available Skills</p>
                     </div>
                     <div class="stat-item">
+                        <div class="stat-icon">📅</div>
                         <h3 id="active-sessions">0</h3>
                         <p>Active Sessions</p>
                     </div>
                     <div class="stat-item">
+                        <div class="stat-icon">👨‍🏫</div>
+                        <h3 id="my-skills-count">0</h3>
+                        <p>My Skills</p>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-icon">💳</div>
                         <h3 id="user-credits">0</h3>
                         <p>Your Credits</p>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="dashboard-section">
+                    <h2>Quick Actions</h2>
+                    <div class="quick-actions">
+                        <div class="action-card" onclick="showAddSkillModal()">
+                            <div class="action-icon">➕</div>
+                            <h3>Add New Skill</h3>
+                            <p>Share your expertise with others</p>
+                        </div>
+                        <div class="action-card" onclick="showSection('skills')">
+                            <div class="action-icon">🔍</div>
+                            <h3>Browse Skills</h3>
+                            <p>Find skills to learn from peers</p>
+                        </div>
+                        <div class="action-card" onclick="showSection('sessions')">
+                            <div class="action-icon">📋</div>
+                            <h3>Manage Sessions</h3>
+                            <p>View and manage your sessions</p>
+                        </div>
+                        <div class="action-card" onclick="showSection('wallet')">
+                            <div class="action-icon">💰</div>
+                            <h3>My Wallet</h3>
+                            <p>View credits and transactions</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Available Skills -->
+                <div class="dashboard-section">
+                    <div class="section-header">
+                        <h2>Available Skills</h2>
+                        <button class="view-all-btn" onclick="showSection('skills')">View All</button>
+                    </div>
+                    <div id="dashboard-skills" class="dashboard-skills-grid">
+                        <!-- Skills will be loaded here -->
+                    </div>
+                </div>
+
+                <!-- Recent Sessions -->
+                <div class="dashboard-section">
+                    <div class="section-header">
+                        <h2>Recent Sessions</h2>
+                        <button class="view-all-btn" onclick="showSection('sessions')">View All</button>
+                    </div>
+                    <div id="dashboard-sessions" class="dashboard-sessions-list">
+                        <!-- Sessions will be loaded here -->
+                    </div>
+                </div>
+
+                <!-- My Skills Overview -->
+                <div class="dashboard-section">
+                    <div class="section-header">
+                        <h2>My Skills</h2>
+                        <button class="view-all-btn" onclick="showSection('my-skills')">Manage Skills</button>
+                    </div>
+                    <div id="dashboard-my-skills" class="dashboard-skills-grid">
+                        <!-- My skills will be loaded here -->
+                    </div>
+                </div>
+
+                <!-- Quick Search -->
+                <div class="dashboard-section">
+                    <h2>Quick Search</h2>
+                    <div class="quick-search">
+                        <input type="text" id="dashboard-search" placeholder="Search for skills..." class="search-input">
+                        <div class="search-filters">
+                            <select id="dashboard-payment-filter" class="filter-select">
+                                <option value="">All Payment Types</option>
+                                <option value="credits">Credits</option>
+                                <option value="favor">Favor</option>
+                            </select>
+                            <select id="dashboard-session-filter" class="filter-select">
+                                <option value="">All Session Types</option>
+                                <option value="online">Online</option>
+                                <option value="offline">Offline</option>
+                            </select>
+                            <button class="search-btn" onclick="performDashboardSearch()">Search</button>
+                        </div>
+                        <div id="search-results" class="search-results">
+                            <!-- Search results will appear here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Activity Feed -->
+                <div class="dashboard-section">
+                    <h2>Recent Activity</h2>
+                    <div id="activity-feed" class="activity-feed">
+                        <!-- Activity will be loaded here -->
                     </div>
                 </div>
             </div>
