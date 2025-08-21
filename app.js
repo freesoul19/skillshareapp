@@ -13,6 +13,21 @@ const loading = document.getElementById('loading');
 
 // Initialize the application
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM loaded, initializing app...');
+    
+    // Check if Firebase is loaded
+    if (typeof firebase === 'undefined') {
+        console.error('Firebase not loaded!');
+        alert('Error: Firebase not loaded. Please check your internet connection and try again.');
+        return;
+    }
+    
+    console.log('Firebase loaded:', firebase);
+    console.log('Firebase auth:', auth);
+    console.log('Firebase firestore:', db);
+    console.log('APP_ID:', APP_ID);
+    console.log('PATHS:', PATHS);
+    
     setupEventListeners();
     setupAuthStateListener();
     setupNavigation();
@@ -219,31 +234,94 @@ function populateProfileForm() {
 
 // Skills management
 async function handleAddSkill(e) {
+    console.log('handleAddSkill called', e);
     e.preventDefault();
-    if (!currentUser || !currentUserProfile) return;
+    
+    // Debug logging
+    console.log('Current user:', currentUser);
+    console.log('Current user profile:', currentUserProfile);
+    console.log('Firebase auth:', auth);
+    console.log('Firestore db:', db);
+    console.log('APP_ID:', APP_ID);
+    
+    if (!currentUser) {
+        showToast('Please log in to add a skill', 'error');
+        console.error('No current user');
+        return;
+    }
+    
+    if (!currentUserProfile) {
+        showToast('Please complete your profile first', 'error');
+        console.error('No user profile');
+        return;
+    }
+
+    // Validate form data
+    const skillName = document.getElementById('skill-name').value.trim();
+    const skillDescription = document.getElementById('skill-description').value.trim();
+    const paymentType = document.getElementById('skill-payment-type').value;
+    const paymentAmount = document.getElementById('skill-payment-amount').value || 0;
+    const sessionType = document.getElementById('skill-session-type').value;
+    
+    console.log('Form data:', { skillName, skillDescription, paymentType, paymentAmount, sessionType });
+    
+    if (!skillName) {
+        showToast('Please enter a skill name', 'error');
+        return;
+    }
+    
+    if (!skillDescription) {
+        showToast('Please enter a skill description', 'error');
+        return;
+    }
+    
+    if (!paymentType) {
+        showToast('Please select a payment type', 'error');
+        return;
+    }
+    
+    if (!sessionType) {
+        showToast('Please select a session type', 'error');
+        return;
+    }
+    
+    if (paymentType === 'credits' && (!paymentAmount || paymentAmount <= 0)) {
+        showToast('Please enter a valid payment amount', 'error');
+        return;
+    }
 
     const skillData = {
-        name: document.getElementById('skill-name').value,
-        description: document.getElementById('skill-description').value,
-        paymentType: document.getElementById('skill-payment-type').value,
-        paymentAmount: document.getElementById('skill-payment-amount').value || 0,
-        sessionType: document.getElementById('skill-session-type').value,
+        name: skillName,
+        description: skillDescription,
+        paymentType: paymentType,
+        paymentAmount: parseInt(paymentAmount) || 0,
+        sessionType: sessionType,
         teacherId: currentUser.uid,
         teacherEmail: currentUser.email,
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
     };
+    
+    console.log('Skill data to save:', skillData);
 
     showLoading(true);
     try {
+        console.log('Attempting to save to Firebase...');
         const docRef = db.collection(`artifacts/${APP_ID}/public/data/skills`);
-        await docRef.add(skillData);
+        console.log('Collection reference:', docRef);
+        
+        const result = await docRef.add(skillData);
+        console.log('Skill saved successfully with ID:', result.id);
+        
         showToast('Skill added successfully!', 'success');
         closeModal();
         document.getElementById('add-skill-form').reset();
         loadMySkills();
         loadAllSkills();
     } catch (error) {
-        showToast(error.message, 'error');
+        console.error('Error adding skill:', error);
+        console.error('Error code:', error.code);
+        console.error('Error message:', error.message);
+        showToast(`Error: ${error.message}`, 'error');
     }
     showLoading(false);
 }

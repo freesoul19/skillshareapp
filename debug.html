@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SkillShare Debug</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .debug-section { margin: 20px 0; padding: 20px; border: 1px solid #ccc; border-radius: 5px; }
+        .error { color: red; }
+        .success { color: green; }
+        .info { color: blue; }
+        button { padding: 10px 20px; margin: 10px; }
+        input, select, textarea { margin: 5px; padding: 8px; width: 200px; }
+    </style>
+</head>
+<body>
+    <h1>SkillShare Debugging Page</h1>
+    
+    <div class="debug-section">
+        <h2>Firebase Status Check</h2>
+        <button onclick="checkFirebase()">Check Firebase Connection</button>
+        <div id="firebase-status"></div>
+    </div>
+
+    <div class="debug-section">
+        <h2>Authentication Test</h2>
+        <button onclick="testLogin()">Test Login</button>
+        <button onclick="testLogout()">Test Logout</button>
+        <div id="auth-status"></div>
+    </div>
+
+    <div class="debug-section">
+        <h2>Add Skill Test</h2>
+        <form id="test-skill-form">
+            <input type="text" id="test-skill-name" placeholder="Skill Name" required><br>
+            <textarea id="test-skill-description" placeholder="Description" required></textarea><br>
+            <select id="test-payment-type" required>
+                <option value="">Select Payment Type</option>
+                <option value="credits">Credits</option>
+                <option value="favor">Favor</option>
+            </select><br>
+            <input type="number" id="test-payment-amount" placeholder="Payment Amount" min="1"><br>
+            <select id="test-session-type" required>
+                <option value="">Select Session Type</option>
+                <option value="online">Online</option>
+                <option value="offline">Offline</option>
+            </select><br>
+            <button type="submit">Add Test Skill</button>
+        </form>
+        <div id="skill-test-result"></div>
+    </div>
+
+    <div class="debug-section">
+        <h2>Console Logs</h2>
+        <div id="console-logs" style="background: #f5f5f5; padding: 10px; height: 200px; overflow-y: auto; font-family: monospace;"></div>
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+    
+    <!-- Firebase Config -->
+    <script src="firebase-config.js"></script>
+
+    <script>
+        // Redirect console.log to our debug area
+        const originalLog = console.log;
+        const originalError = console.error;
+        const originalWarn = console.warn;
+        
+        function logToPage(message, type = 'info') {
+            const logsDiv = document.getElementById('console-logs');
+            const timestamp = new Date().toLocaleTimeString();
+            logsDiv.innerHTML += `<div class="${type}">[${timestamp}] ${message}</div>`;
+            logsDiv.scrollTop = logsDiv.scrollHeight;
+        }
+
+        console.log = function(...args) {
+            logToPage(args.join(' '), 'info');
+            originalLog.apply(console, args);
+        };
+
+        console.error = function(...args) {
+            logToPage('ERROR: ' + args.join(' '), 'error');
+            originalError.apply(console, args);
+        };
+
+        console.warn = function(...args) {
+            logToPage('WARN: ' + args.join(' '), 'info');
+            originalWarn.apply(console, args);
+        };
+
+        let currentUser = null;
+        let currentUserProfile = null;
+
+        // Check Firebase connection
+        function checkFirebase() {
+            const statusDiv = document.getElementById('firebase-status');
+            
+            if (typeof firebase === 'undefined') {
+                statusDiv.innerHTML = '<span class="error">❌ Firebase not loaded</span>';
+                return;
+            }
+
+            if (!auth) {
+                statusDiv.innerHTML = '<span class="error">❌ Firebase Auth not initialized</span>';
+                return;
+            }
+
+            if (!db) {
+                statusDiv.innerHTML = '<span class="error">❌ Firebase Firestore not initialized</span>';
+                return;
+            }
+
+            statusDiv.innerHTML = '<span class="success">✅ Firebase loaded successfully</span>';
+            console.log('Firebase check passed');
+            console.log('Auth:', auth);
+            console.log('DB:', db);
+            console.log('APP_ID:', APP_ID);
+        }
+
+        // Test login with demo credentials
+        async function testLogin() {
+            const statusDiv = document.getElementById('auth-status');
+            statusDiv.innerHTML = 'Testing login...';
+            
+            try {
+                // Try to sign in with test credentials
+                await auth.signInWithEmailAndPassword('test@example.com', 'password123');
+                statusDiv.innerHTML = '<span class="success">✅ Login successful</span>';
+                currentUser = auth.currentUser;
+                console.log('Current user:', currentUser);
+            } catch (error) {
+                console.error('Login error:', error);
+                statusDiv.innerHTML = '<span class="error">❌ Login failed: ' + error.message + '</span>';
+                
+                // Try to create the test user if it doesn't exist
+                if (error.code === 'auth/user-not-found') {
+                    try {
+                        await auth.createUserWithEmailAndPassword('test@example.com', 'password123');
+                        
+                        // Create test profile
+                        const user = auth.currentUser;
+                        const profileData = {
+                            name: 'Test User',
+                            email: 'test@example.com',
+                            rollno: 'TEST001',
+                            department: 'Computer Science',
+                            course: 'B.Tech',
+                            year: '3',
+                            credits: 100,
+                            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                        };
+
+                        await db.doc(PATHS.userProfiles(user.uid)).set(profileData);
+                        currentUser = user;
+                        currentUserProfile = profileData;
+                        statusDiv.innerHTML = '<span class="success">✅ Test user created and logged in</span>';
+                        console.log('Test user created:', currentUser);
+                    } catch (createError) {
+                        console.error('Create user error:', createError);
+                        statusDiv.innerHTML = '<span class="error">❌ Failed to create test user: ' + createError.message + '</span>';
+                    }
+                }
+            }
+        }
+
+        // Test logout
+        async function testLogout() {
+            const statusDiv = document.getElementById('auth-status');
+            try {
+                await auth.signOut();
+                currentUser = null;
+                currentUserProfile = null;
+                statusDiv.innerHTML = '<span class="success">✅ Logout successful</span>';
+            } catch (error) {
+                console.error('Logout error:', error);
+                statusDiv.innerHTML = '<span class="error">❌ Logout failed: ' + error.message + '</span>';
+            }
+        }
+
+        // Test add skill
+        document.getElementById('test-skill-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const resultDiv = document.getElementById('skill-test-result');
+            resultDiv.innerHTML = 'Adding skill...';
+            
+            console.log('Form submitted');
+            console.log('Current user:', currentUser);
+
+            if (!currentUser) {
+                resultDiv.innerHTML = '<span class="error">❌ Please login first</span>';
+                return;
+            }
+
+            // Get form data
+            const skillName = document.getElementById('test-skill-name').value.trim();
+            const skillDescription = document.getElementById('test-skill-description').value.trim();
+            const paymentType = document.getElementById('test-payment-type').value;
+            const paymentAmount = document.getElementById('test-payment-amount').value || 0;
+            const sessionType = document.getElementById('test-session-type').value;
+
+            console.log('Form data:', { skillName, skillDescription, paymentType, paymentAmount, sessionType });
+
+            // Validate
+            if (!skillName || !skillDescription || !paymentType || !sessionType) {
+                resultDiv.innerHTML = '<span class="error">❌ Please fill all required fields</span>';
+                return;
+            }
+
+            if (paymentType === 'credits' && (!paymentAmount || paymentAmount <= 0)) {
+                resultDiv.innerHTML = '<span class="error">❌ Please enter a valid payment amount</span>';
+                return;
+            }
+
+            const skillData = {
+                name: skillName,
+                description: skillDescription,
+                paymentType: paymentType,
+                paymentAmount: parseInt(paymentAmount) || 0,
+                sessionType: sessionType,
+                teacherId: currentUser.uid,
+                teacherEmail: currentUser.email,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            };
+
+            console.log('Skill data to save:', skillData);
+
+            try {
+                console.log('Attempting to save to Firebase...');
+                const docRef = db.collection(`artifacts/${APP_ID}/public/data/skills`);
+                console.log('Collection reference:', docRef);
+                
+                const result = await docRef.add(skillData);
+                console.log('Skill saved successfully with ID:', result.id);
+                
+                resultDiv.innerHTML = '<span class="success">✅ Skill added successfully! ID: ' + result.id + '</span>';
+                document.getElementById('test-skill-form').reset();
+                
+            } catch (error) {
+                console.error('Error adding skill:', error);
+                resultDiv.innerHTML = '<span class="error">❌ Error: ' + error.message + '</span>';
+            }
+        });
+
+        // Listen for auth state changes
+        if (typeof auth !== 'undefined') {
+            auth.onAuthStateChanged(async (user) => {
+                if (user) {
+                    console.log('User signed in:', user);
+                    currentUser = user;
+                    
+                    // Try to load user profile
+                    try {
+                        const doc = await db.doc(PATHS.userProfiles(user.uid)).get();
+                        if (doc.exists) {
+                            currentUserProfile = doc.data();
+                            console.log('User profile loaded:', currentUserProfile);
+                        }
+                    } catch (error) {
+                        console.error('Error loading profile:', error);
+                    }
+                } else {
+                    console.log('User signed out');
+                    currentUser = null;
+                    currentUserProfile = null;
+                }
+            });
+        }
+
+        // Initialize
+        window.addEventListener('DOMContentLoaded', function() {
+            console.log('Debug page loaded');
+            checkFirebase();
+        });
+    </script>
+</body>
+</html>
